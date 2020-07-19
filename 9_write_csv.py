@@ -1,6 +1,7 @@
-# code for extracting images from a video stream
 
 '''
+# sample for writing a csv data file
+
 Description: This code writes .csv file
 Author: Gaurav Borgaonkar
 Date: 15 June 2020
@@ -30,5 +31,4 @@ with open('test.csv', 'w', newline='') as csvfile:
 
 print(len(x_list))
 print(len(y_list))
-
 
