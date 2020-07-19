@@ -1,3 +1,8 @@
+'''
+Example to show implementation of Sobel thresholds
+
+'''
+
 import os
 import numpy as np
 import cv2
@@ -25,7 +30,6 @@ def mag_sobel(img, sobel_kernel=3, thresh = (190,255)):
     plt.figure(3)
     plt.imshow(g)
     plt.show()
-    
 
     # 1. Applying the Sobel (taking the derivative)
     sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize = sobel_kernel)
