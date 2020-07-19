@@ -1,3 +1,8 @@
+'''
+
+This is an example for showing different types of random number generation for quick reference.
+
+'''
 # code snippet for different random options
 
 import os
