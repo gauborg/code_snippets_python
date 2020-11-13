@@ -9,7 +9,7 @@ from moviepy.editor import VideoFileClip
 
 
 
-def masking(img):
+def bin_video(img):
 
     # convert to HLS colorspace
     hls = cv2.cvtColor(img, cv2.COLOR_RGB2HLS)
@@ -17,7 +17,6 @@ def masking(img):
     # convert to grayscale
     gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     gray_blurred = cv2.GaussianBlur(gray,(5,5),cv2.BORDER_DEFAULT)
-
     img_blurred = cv2.GaussianBlur(img,(5,5),cv2.BORDER_DEFAULT)
 
 
@@ -26,7 +25,7 @@ def masking(img):
     l_channel = hls_blurred[:,:,1]
     # 3. Create empty array to store the binary output and apply threshold
     l_binary = np.zeros_like(l_channel)
-    l_binary[(l_channel > 120) & (l_channel <= 255)] = 1
+    l_binary[(l_channel > 130) & (l_channel <= 255)] = 1
 
 
     ############## ------ PIXEL BINARY IMAGE ------ ###############
@@ -34,7 +33,7 @@ def masking(img):
     # 1. apply threshold
     intensity_binary = np.zeros_like(gray_blurred)
     # 2. create a binary image
-    intensity_binary[(gray_blurred > 160) & (gray_blurred <= 255)] = 1
+    intensity_binary[(gray_blurred > 150) & (gray_blurred <= 255)] = 1
 
 
     ################## ------ SOBEL OPERATOR ------ ################
@@ -59,33 +58,37 @@ def masking(img):
     # apply region of interest mask
     height, width = combined_l_or_intensity.shape
     mask = np.zeros_like(combined_l_or_intensity)
+
     
     # define the region as 
     region = np.array([[0, height-1], [int(width/2), int(height/2)], [width-1, height-1]], dtype=np.int32)
     cv2.fillPoly(mask, [region], 1)
 
-    masked = cv2.bitwise_and(combined_l_or_intensity, mask)
+    masked_img = cv2.bitwise_and(combined_l_or_intensity, mask)
+
+    # canny edge detection
+    canny_img = cv2.Canny(img_blurred, 50, 150)
+    canny_img2 = np.zeros_like(img_blurred)
+    canny_img2[:,:,0] = canny_img
+    canny_img2[:,:,1] = canny_img
+    canny_img2[:,:,2] = canny_img
 
     # copy of final image
-    result = np.copy(img)
-    
-    # final image
-    img2 = np.zeros_like(img)
-    img2[:,:,0] = 255*masked
-    img2[:,:,1] = 255*masked
-    img2[:,:,2] = 255*masked
-    result = img2
-    
+    combined_canny_and_threshold = np.zeros_like(canny_img)
+    combined_canny_and_threshold[(combined_l_or_intensity == 1) | (canny_img == 1)] = 1
+
+    # resulting final image
+    result = np.zeros_like(img_blurred)
+    result[:,:,0] = 255*combined_canny_and_threshold
+    result[:,:,1] = 255*combined_canny_and_threshold
+    result[:,:,2] = 255*combined_canny_and_threshold
+
     return result
 
 
 # video pipeline
-video_binary_output = 'video-output.mp4'
+video_binary_output = 'video-output-combined.mp4'
 clip1 = VideoFileClip("video.mp4")
 
-white_clip = clip1.fl_image(masking) # NOTE: this function expects color images!!
+white_clip = clip1.fl_image(bin_video) # NOTE: this function expects color images!!
 white_clip.write_videofile(video_binary_output, audio=False)
-
-
-
-
